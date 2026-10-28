@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  backend:
+    image: ${DOCKER_USER}/capstone-backend:latest
+    deploy:
+      replicas: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    networks:
+      - swarm-net
+
+  frontend:
+    image: ${DOCKER_USER}/capstone-frontend:latest
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      restart_policy:
+        condition: on-failure
+    networks:
+      - swarm-net
+
+  nginx:
+    image: ${DOCKER_USER}/capstone-nginx:latest
+    ports:
+      - "80:80"
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 5s
+        order: start-first
+      restart_policy:
+        condition: on-failure
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - swarm-net
+
+networks:
+  swarm-net:
+    driver: overlay
+    attachable: true
