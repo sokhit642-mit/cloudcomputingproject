@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   backend:
-    image: ${DOCKER_USER}/capstone-backend:latest
+    image: ksk6699/capstone-backend:latest
     deploy:
       replicas: 3
       update_config:
@@ -18,7 +18,7 @@ services:
       - swarm-net
 
   frontend:
-    image: ${DOCKER_USER}/capstone-frontend:latest
+    image: ksk6699/capstone-frontend:latest
     deploy:
       replicas: 2
       update_config:
@@ -31,7 +31,7 @@ services:
       - swarm-net
 
   nginx:
-    image: ${DOCKER_USER}/capstone-nginx:latest
+    image: ksk6699/capstone-nginx:latest
     ports:
       - "80:80"
     deploy:
