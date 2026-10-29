@@ -12,10 +12,10 @@ pipeline {
     stages {
         stage('Automated Tests') {
             steps {
-                echo '=== Running Automated Backend Unit Tests ==='
-                dir('services/backend') {
-                    sh 'node test.js'
-                }
+                echo '=== Running Automated Backend Unit Tests inside Docker ==='
+                sh '''
+                    docker run --rm -v "$(pwd)/services/backend:/app" -w /app node:18-alpine node test.js
+                '''
             }
         }
 
