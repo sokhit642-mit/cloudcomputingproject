@@ -26,6 +26,10 @@ WORKDIR /var/www/html
 # Copy application source code
 COPY . .
 
+# Install Laravel PHP dependencies & generate vendor/autoload.php
+ENV COMPOSER_ALLOW_SUPERUSER=1
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
 # Set write permissions for Laravel storage and cache directories
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
