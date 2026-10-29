@@ -1,24 +1,32 @@
 version: '3.8'
 
 services:
-  backend:
-    image: ksk6699/capstone-backend:latest
+  db:
+    image: ksk6699/capstone-db:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: ecomm_db
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - app-net
     deploy:
-      replicas: 3
-      update_config:
-        parallelism: 1
-        delay: 10s
-        order: start-first
-        failure_action: rollback
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
       restart_policy:
         condition: on-failure
-        delay: 5s
-        max_attempts: 3
-    networks:
-      - swarm-net
 
-  frontend:
-    image: ksk6699/capstone-frontend:latest
+  backend:
+    image: ksk6699/capstone-backend:latest
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=ecomm_db
+      - DB_USERNAME=root
+      - DB_PASSWORD=rootpassword
+    networks:
+      - app-net
     deploy:
       replicas: 2
       update_config:
@@ -27,13 +35,13 @@ services:
         order: start-first
       restart_policy:
         condition: on-failure
-    networks:
-      - swarm-net
 
   nginx:
     image: ksk6699/capstone-nginx:latest
     ports:
       - "80:80"
+    networks:
+      - app-net
     deploy:
       replicas: 2
       update_config:
@@ -42,13 +50,10 @@ services:
         order: start-first
       restart_policy:
         condition: on-failure
-    depends_on:
-      - backend
-      - frontend
-    networks:
-      - swarm-net
+
+volumes:
+  db-data:
 
 networks:
-  swarm-net:
+  app-net:
     driver: overlay
-    attachable: true
