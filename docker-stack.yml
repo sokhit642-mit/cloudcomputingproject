@@ -20,6 +20,9 @@ services:
   backend:
     image: ksk6699/capstone-backend:latest
     environment:
+      - APP_ENV=production
+      - APP_DEBUG=true
+      - DB_CONNECTION=mysql
       - DB_HOST=db
       - DB_PORT=3306
       - DB_DATABASE=ecomm_db
