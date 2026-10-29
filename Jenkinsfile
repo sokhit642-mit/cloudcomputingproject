@@ -4,8 +4,8 @@ pipeline {
     environment {
         DOCKER_HUB_USER    = 'ksk6699'
         SWARM_MANAGER_IP   = '13.236.178.61'
-        DOCKER_HUB_CREDS   = credentials('docker-hub-credentials')
-        SSH_KEY            = credentials('aws-swarm-ssh-key')
+        DOCKER_HUB_CREDS   = credentials('docker-hub-id')
+        SSH_KEY            = credentials('swarm-manager-ssh')
         TELEGRAM_TOKEN     = credentials('telegram-bot-token')
         TELEGRAM_CHAT_ID   = credentials('telegram-chat-id')
     }
@@ -43,7 +43,7 @@ pipeline {
         stage('Deploy to Docker Swarm') {
             steps {
                 echo '=== Deploying Stack to AWS Docker Swarm Manager ==='
-                sshagent(['aws-swarm-ssh-key']) {
+                sshagent(['swarm-manager-ssh']) {
                     sh "scp -o StrictHostKeyChecking=no docker-stack.yml ubuntu@${SWARM_MANAGER_IP}:~/docker-stack.yml"
                     sh """
                         ssh -o StrictHostKeyChecking=no ubuntu@${SWARM_MANAGER_IP} '
@@ -69,22 +69,24 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline succeeded!'
-            sh """
-                curl -s -X POST https://api.telegram.org/bot\${TELEGRAM_TOKEN}/sendMessage \
-                -d chat_id=\${TELEGRAM_CHAT_ID} \
-                -d text="✅ *Deployment Successful!*%0A• Project: Capstone Cloud%0A• Build: #${BUILD_NUMBER}%0A• Endpoint: http://${SWARM_MANAGER_IP}" \
-                -d parse_mode="Markdown"
-            """
+            node {
+                sh """
+                    curl -s -X POST https://api.telegram.org/bot\${TELEGRAM_TOKEN}/sendMessage \
+                    -d chat_id=\${TELEGRAM_CHAT_ID} \
+                    -d text="✅ *Deployment Successful!*%0A• Project: Capstone Cloud%0A• Build: #${BUILD_NUMBER}%0A• Endpoint: http://${SWARM_MANAGER_IP}" \
+                    -d parse_mode="Markdown"
+                """
+            }
         }
         failure {
-            echo 'Pipeline failed!'
-            sh """
-                curl -s -X POST https://api.telegram.org/bot\${TELEGRAM_TOKEN}/sendMessage \
-                -d chat_id=\${TELEGRAM_CHAT_ID} \
-                -d text="❌ *Deployment Failed!*%0A• Project: Capstone Cloud%0A• Build: #${BUILD_NUMBER}%0A• Status: Check Jenkins console output." \
-                -d parse_mode="Markdown"
-            """
+            node {
+                sh """
+                    curl -s -X POST https://api.telegram.org/bot\${TELEGRAM_TOKEN}/sendMessage \
+                    -d chat_id=\${TELEGRAM_CHAT_ID} \
+                    -d text="❌ *Deployment Failed!*%0A• Project: Capstone Cloud%0A• Build: #${BUILD_NUMBER}%0A• Status: Check Jenkins console output." \
+                    -d parse_mode="Markdown"
+                """
+            }
         }
     }
 }
