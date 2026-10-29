@@ -26,19 +26,19 @@ WORKDIR /var/www/html
 # Copy application source code
 COPY . .
 
-# Ensure .env is created from .env.example
+# Ensure .env exists from template
 COPY .env.example .env
 
 # Install Composer dependencies
 ENV COMPOSER_ALLOW_SUPERUSER=1
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Generate production application key
-RUN php artisan key:generate --force
+# Set up storage symlink
+RUN php artisan storage:link || true
 
-# Set directory permissions for web server
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# Grant open read/write permissions for storage, cache, and public uploads
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
 
 EXPOSE 80
 CMD ["apache2-foreground"]
