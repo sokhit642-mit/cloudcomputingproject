@@ -5,7 +5,6 @@ pipeline {
         DOCKER_HUB_USER    = 'ksk6699'
         SWARM_MANAGER_IP   = '13.236.178.61'
         DOCKER_HUB_CREDS   = credentials('docker-hub-id')
-        SSH_KEY            = credentials('swarm-manager-ssh')
         TELEGRAM_TOKEN     = credentials('telegram-bot-token')
         TELEGRAM_CHAT_ID   = credentials('telegram-chat-id')
     }
@@ -68,23 +67,17 @@ pipeline {
     }
 
     post {
-        success {
-            node {
+        always {
+            script {
+                def statusEmoji = (currentBuild.currentResult == 'SUCCESS') ? '✅' : '❌'
+                def statusText  = (currentBuild.currentResult == 'SUCCESS') ? 'Deployment Successful!' : 'Deployment Failed!'
+                def msg = "${statusEmoji} *${statusText}*%0A• Project: Capstone Cloud%0A• Build: #${BUILD_NUMBER}%0A• Status: ${currentBuild.currentResult}%0A• Endpoint: http://${SWARM_MANAGER_IP}"
+                
                 sh """
-                    curl -s -X POST https://api.telegram.org/bot\${TELEGRAM_TOKEN}/sendMessage \
-                    -d chat_id=\${TELEGRAM_CHAT_ID} \
-                    -d text="✅ *Deployment Successful!*%0A• Project: Capstone Cloud%0A• Build: #${BUILD_NUMBER}%0A• Endpoint: http://${SWARM_MANAGER_IP}" \
-                    -d parse_mode="Markdown"
-                """
-            }
-        }
-        failure {
-            node {
-                sh """
-                    curl -s -X POST https://api.telegram.org/bot\${TELEGRAM_TOKEN}/sendMessage \
-                    -d chat_id=\${TELEGRAM_CHAT_ID} \
-                    -d text="❌ *Deployment Failed!*%0A• Project: Capstone Cloud%0A• Build: #${BUILD_NUMBER}%0A• Status: Check Jenkins console output." \
-                    -d parse_mode="Markdown"
+                    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+                    -d "chat_id=${TELEGRAM_CHAT_ID}" \
+                    -d "text=${msg}" \
+                    -d "parse_mode=Markdown"
                 """
             }
         }
