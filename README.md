@@ -172,3 +172,10 @@ Content-Type: application/json
 
 {"status":"UP","app":"ecomm-laravel"}
 ```
+### Update ReadMe File
+To deploy or update the ReadMe File:
+```bash
+git add README.md
+git commit -m "Update ReadME"
+git push origin main
+```
